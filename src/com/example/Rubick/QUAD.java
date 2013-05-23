@@ -81,6 +81,7 @@ class QUAD implements Drawable {
 		coords[4] = leftBottom[0];
 		coords[5] = rightTop[1];
 		coords[6] = leftBottom[2];
+
 		coords[8] = rightTop[0];
 		coords[9] = leftBottom[1];
 		coords[10] = rightTop[2];
