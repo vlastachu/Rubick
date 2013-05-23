@@ -215,6 +215,18 @@ public class LinearUtils {
 		}
 	}
 
+	public static float[] multiply(float[] matrix, float[] vector)
+	{
+		float[] res = new float[4];
+		for (int i=0;i<4;i++) {
+			res[i] =
+					matrix[i*4]*vector[0]+
+							matrix[i*4+1]*vector[1]+
+							matrix[i*4+2]*vector[2]+
+							matrix[i*4+3]*vector[3];
+		}
+		return res;
+	}
 	/**
 	 * Pretty print a matrix to stdout.
 	 * @param matrix The matrix

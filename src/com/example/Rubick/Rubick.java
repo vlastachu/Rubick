@@ -22,7 +22,7 @@ class Rubick implements Drawable {
     private float[] matrix;
 	public final float space = 1.05f;
     Rubick() {
-
+		//TODO BYDLOCODE
         cubes[0] = new CUBE(space, 0, 0, white, white, green, white, white, white);
         cubes[1] = new CUBE(space, space, 0, white, white, green, white, red, white);
         cubes[2] = new CUBE(space, -space, 0, white, white, green, white, white, blue);
@@ -55,34 +55,32 @@ class Rubick implements Drawable {
         edges[0] = new Edge(1, 0, 0);
         edges[1] = new Edge(1, 0, 0);
         edges[2] = new Edge(1, 0, 0);
-        for (int i = 0; i < 9; i++) edges[0].add(cubes[i]);
-        for (int i = 9; i < 18; i++) edges[1].add(cubes[i]);
-        for (int i = 18; i < 26; i++) edges[2].add(cubes[i]);
         edges[3] = new Edge(0, 1, 0);
         edges[4] = new Edge(0, 1, 0);
         edges[5] = new Edge(0, 1, 0);
         edges[6] = new Edge(0, 0, 1);
         edges[7] = new Edge(0, 0, 1);
         edges[8] = new Edge(0, 0, 1);
-        for (int i = 0; i < 24; i++) {
-            if (i % 3 == 0)
-                edges[3].add(cubes[i]);
-            if (i % 3 == 1)
-                edges[4].add(cubes[i]);
-            if (i % 3 == 2)
-                edges[5].add(cubes[i]);
-            if (i % 9 == 0)
-                edges[6].add(cubes[i]).add(cubes[i + 1]).add(cubes[i + 2]);
-            if (i % 9 == 3)
-                edges[7].add(cubes[i]).add(cubes[i + 1]).add(cubes[i + 2]);
-            if (i % 9 == 6)
-                edges[8].add(cubes[i]).add(cubes[i + 1]).add(cubes[i + 2]);
-        }
-        edges[4].add(cubes[24]);
-        edges[5].add(cubes[25]);
-
-        edges[8].add(cubes[24]).add(cubes[25]);
+		resetEdges();
     }
+
+	public void resetEdges(){
+		for(Edge edge: edges)
+			edge.clean();
+		for(CUBE cube: cubes){
+			float[] pos = cube.getPosition();
+			for(int i = 0; i < 3; i++)
+				if(pos[i] <= space + 0.1 && pos[i] >= space -0.1){
+					edges[i].add(cube);
+				}
+				else if(pos[i] <= -space + 0.1 && pos[i] >= -space -0.1){
+					edges[i+1].add(cube);
+				}
+				else if(pos[i] <= 0.1 && pos[i] >= -0.1){
+					edges[i+2].add(cube);
+				}
+		}
+	}
 
     public void setMatrix(float[] matrix) {
         this.matrix = matrix;

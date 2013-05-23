@@ -59,12 +59,11 @@ class BasicGLSurfaceView extends GLSurfaceView {
 			dy = y - beginY;
 			switch (e.getAction()) {
 				case MotionEvent.ACTION_DOWN:
-					//renderer.chooseCubeByPixel(x, y);
+					//renderer.chooseCubeByPixel((int)x, (int)y);
 					break;
 				case MotionEvent.ACTION_MOVE:
 					if(beginX != -1 && beginY != -1)
 						renderer.rotateEdge(dx, dy);
-
 					requestRender();
 					break;
 				case MotionEvent.ACTION_UP:

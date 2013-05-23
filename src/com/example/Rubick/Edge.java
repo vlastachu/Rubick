@@ -18,12 +18,19 @@ public class Edge {
         dirY = directionY;
         dirZ = directionZ;
     }
-
+	public float[] getNormal(){
+		return new float[]{dirX, dirY, dirZ};
+	}
     public Edge add(CUBE cube){
         cubes.add(cube);
         cube.belongsTo.add(this);
         return this;
     }
+	public void clean(){
+		for(CUBE cube: cubes)
+			cube.belongsTo.clear();
+		cubes.clear();
+	}
 	private float lastRotationDirection = 0.5f;
     public void rotate(float angle){
         for(CUBE cube: cubes){

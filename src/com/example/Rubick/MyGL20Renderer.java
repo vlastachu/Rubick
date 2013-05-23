@@ -9,6 +9,9 @@ import android.view.MotionEvent;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 
 
@@ -61,13 +64,9 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
 	private float cameraDistance = 7;
 	private float[] cameraTop = {0, 1, 0};
     public void onDrawFrame(GL10 unused) {
-        // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         Matrix.setLookAtM(VMatrix, 0, cameraPos[0]*cameraDistance, cameraPos[1]*cameraDistance, cameraPos[2]*cameraDistance, 0f, 0f, 0f, cameraTop[0], cameraTop[1], cameraTop[2]);
-
-        // Calculate the projection and view transformation
-        time = SystemClock.uptimeMillis() % 4000L;
-        //Matrix.setRotateM(rotateMat, 0, angle, 1.0f, 0.23f, 0.9f);
+		time = SystemClock.uptimeMillis() % 4000L;
         Matrix.multiplyMM(MVPMatrix, 0, ProjMatrix, 0, VMatrix, 0);
         float[] tempMatrix = Arrays.copyOf(MVPMatrix, 16);
         Matrix.multiplyMM(MVPMatrix, 0, tempMatrix, 0,rotateMat, 0);
@@ -87,28 +86,56 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
 
 
 
-	//renderer.chooseCubeByPixel(x, y);
+	public void chooseCubeByPixel(int x, int y){
+		for(int i = 0; i < cube.cubes.length; i++)
+			cube.cubes[i].setColor(new float[]{i*20/255f,0,0});
+		onDrawFrame(null);
+		ByteBuffer buf = ByteBuffer.allocateDirect(3);
+		buf.order(ByteOrder.nativeOrder());
+		GLES20.glReadPixels(x, y, 1, 1, GLES20.GL_RGB, GLES20.GL_UNSIGNED_BYTE, buf);
+		byte b[] = new byte[3];
+		buf.get(b);
+		Integer i = Math.round((b[0]&0xFF)/20f);
+		Log.d("RUB","chosenCube: " + i.toString());
+		chosenCube = cube.cubes[i];
+		for(CUBE _cube: cube.cubes)
+			_cube.resetColors();
+	}
 	private CUBE chosenCube = null;
 	private Edge chosenEdge = null;
-	public void chooseCubeByPixel(int x, int y){
-
-	}
 	public boolean snapToEdge(){
 		return chosenEdge.snapToEdge();
 	}
 	public void rotateEdge(float dx, float dy){
 		dx = dx*6*ratio/((float)surfaceWidth);
 		dy = dy*6/((float)surfaceHeight);
-		float[] top = cameraTop.clone(), right = new float[3], shift = new float[3];
-		LinearUtils.cross(cameraPos, top, right);
-		LinearUtils.normalize(right);
-		LinearUtils.scalarMultiply(top, dy);
-		LinearUtils.scalarMultiply(right, dx);
-		LinearUtils.plus(top, right, shift);
-		float scalarShift = LinearUtils.dot(shift, cameraTop);
-		float angle = (float)Math.atan((1.5*cube.space)/scalarShift);
-		chosenEdge.rotate(angle);
+		float[] top = cameraTop.clone(), right = new float[3], shift = new float[3], touch = {dx, dy, 0};
+//		LinearUtils.cross(cameraPos, top, right);
+//		LinearUtils.normalize(right);
+//		LinearUtils.scalarMultiply(top, dy);
+//		LinearUtils.scalarMultiply(right, dx);
+//		LinearUtils.plus(top, right, shift);
+		if(chosenEdge == null){
+			//векторно умножаем позицию камеры на нормаль грани
+			//потом скалярно на вектор касания
+			//ищем максимальный по модулю
+			float max = 0;
+			for(Edge edge: chosenCube.belongsTo){
+				float[] cross = new float[3];
+				LinearUtils.cross(cameraPos, edge.getNormal(), cross);
+				float i = Math.abs(LinearUtils.dot(cross, touch));
+				if(i > max){
+					chosenEdge = edge;
+					max = i;
+				}
+			}
+		}
 
+		float[] cross = new float[3];
+		LinearUtils.cross(cameraPos, chosenEdge.getNormal(), cross);
+		float i = LinearUtils.dot(cross, touch);
+		float angle = (float)Math.atan((cube.space)/i);
+		chosenEdge.rotate(angle);
 	}
 	//renderer.haltEdgeRotation();
 	public void rotateCameraPos(float dx, float dy){
@@ -144,7 +171,7 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
 		return 1/cameraDistance;
 	}
 	public void setCameraDistance(float d){
-		Log.d("RUB",Float.toString(d)+ " " + Float.toString(cameraDistance));
+		//Log.d("RUB",Float.toString(d)+ " " + Float.toString(cameraDistance));
 		if(1/d > 4 && 1/d < 8.5)
 			cameraDistance = 1/d;
 	}

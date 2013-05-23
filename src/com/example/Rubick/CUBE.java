@@ -1,6 +1,7 @@
 package com.example.Rubick;
 
 import android.opengl.Matrix;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +13,8 @@ import java.util.List;
  * Time: 16:33
  */
 public class CUBE implements Drawable {
+	private float[] color = new float[4];
+	private final float[][] defaultColors;
     private QUAD[] quads;
     private float[] matrix = new float[16];
     private float[] rotateMatrix = new float[16];
@@ -20,7 +23,6 @@ public class CUBE implements Drawable {
 
     public void setMatrix(float[] matrix){
         this.matrix = Arrays.copyOf(matrix,16);
-        //Matrix.multiplyMM(this.matrix, 0, matrix, 0, rotateMatrix, 0);
         for(QUAD quad: quads){
             quad.setMatrix(this.matrix);
         }
@@ -35,35 +37,58 @@ public class CUBE implements Drawable {
         Matrix.setRotateM(rotateMatrix, 0, _angle, dirX, dirY, dirZ);
     }
 
+	public float[] getColor() {
+		return color;
+	}
+
+	public void setColor(float[] color) {
+		this.color = color;
+		for(QUAD quad: quads){
+			quad.setColor(color);
+		}
+	}
+
+	public void resetColors(){
+		for(int i = 0; i < 6; i++){
+			quads[i].setColor(defaultColors[i]);
+		}
+	}
+
+	float[] position;
+
+	public float[] getPosition() {
+		float[] res = new float[4];
+		return LinearUtils.multiply(rotateMatrix, position);
+	}
     public CUBE(float startPosX, float startPosY, float startPosZ, float[] colorFront, float[] colorBack, float[] colorRight, float[] colorLeft,float[] colorTop, float[] colorBottom ) {
         Matrix.setIdentityM(rotateMatrix, 0);
         Matrix.setIdentityM(translateMatrix, 0);
-        quads = new QUAD[6];
+		defaultColors = new float[][]{colorFront, colorBack, colorRight, colorLeft, colorBottom, colorTop};
+		quads = new QUAD[6];
         //front
-        quads[0] = new QUAD(new float[]{0.5f, 0.5f, 0.5f}, new float[]{-0.5f, -0.5f, 0.5f}, colorFront);
+        quads[0] = new QUAD(new float[]{0.5f, 0.5f, 0.5f}, new float[]{-0.5f, -0.5f, 0.5f});
         //back
-        quads[1] = new QUAD(new float[]{0.5f, 0.5f, -0.5f}, new float[]{-0.5f, -0.5f, -0.5f}, colorBack);
+        quads[1] = new QUAD(new float[]{0.5f, 0.5f, -0.5f}, new float[]{-0.5f, -0.5f, -0.5f});
         //right
-        quads[2] = new QUAD(new float[]{0.5f, 0.5f, -0.5f}, new float[]{0.5f, -0.5f, 0.5f}, colorRight);
+        quads[2] = new QUAD(new float[]{0.5f, 0.5f, -0.5f}, new float[]{0.5f, -0.5f, 0.5f});
         //left
-        quads[3] = new QUAD(new float[]{-0.5f, 0.5f, -0.5f}, new float[]{-0.5f, -0.5f, 0.5f}, colorLeft);
+        quads[3] = new QUAD(new float[]{-0.5f, 0.5f, -0.5f}, new float[]{-0.5f, -0.5f, 0.5f});
         //bottom
-        quads[4] = new QUAD(new float[]{0.5f, -0.5f, -0.5f},new float[]{0.5f, -0.5f, 0.5f}, new float[]{-0.5f, -0.5f, -0.5f},new float[]{-0.5f, -0.5f, 0.5f} , colorBottom);
+        quads[4] = new QUAD(new float[]{0.5f, -0.5f, -0.5f},new float[]{0.5f, -0.5f, 0.5f}, new float[]{-0.5f, -0.5f, -0.5f},new float[]{-0.5f, -0.5f, 0.5f});
         //top
-        quads[5] = new QUAD(new float[]{0.5f, 0.5f, -0.5f},new float[]{0.5f, 0.5f, 0.5f}, new float[]{-0.5f, 0.5f, -0.5f},new float[]{-0.5f, 0.5f, 0.5f}, colorTop);
-        Matrix.translateM(translateMatrix, 0, startPosX, startPosY, startPosZ);
+        quads[5] = new QUAD(new float[]{0.5f, 0.5f, -0.5f},new float[]{0.5f, 0.5f, 0.5f}, new float[]{-0.5f, 0.5f, -0.5f},new float[]{-0.5f, 0.5f, 0.5f});
+        resetColors();
+		position = new float[]{startPosX, startPosY, startPosZ, 1f};
+		Matrix.translateM(translateMatrix, 0, startPosX, startPosY, startPosZ);
     }
 
     public void draw() {
-
         float[] tempMatrix = Arrays.copyOf(matrix, 16);
         Matrix.multiplyMM(matrix, 0, tempMatrix, 0,rotateMatrix, 0);
-
         for (QUAD quad : quads){
             quad.setMatrix(matrix);
             quad.draw();
         }
-
     }
     public void draw(float[] MVP){
         Matrix.multiplyMM(matrix,0,MVP,0,rotateMatrix,0);
@@ -75,5 +100,4 @@ public class CUBE implements Drawable {
             quad.draw();
         }
     }
-
 }
