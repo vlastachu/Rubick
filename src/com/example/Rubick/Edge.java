@@ -3,6 +3,7 @@ package com.example.Rubick;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -12,46 +13,48 @@ import java.util.List;
  */
 public class Edge {
     List<CUBE> cubes = new ArrayList<CUBE>();
-    private float dirX, dirY, dirZ;
-    Edge(float directionX, float directionY, float directionZ){
-        dirX = directionX;
-        dirY = directionY;
-        dirZ = directionZ;
+
+    public float[] getNormal() {
+        return Arrays.copyOf(dir, dir.length);
     }
-	public float[] getNormal(){
-		return new float[]{dirX, dirY, dirZ};
-	}
+
+    private float[] dir = new float[3];
+    Edge(float directionX, float directionY, float directionZ){
+        dir[0] = directionX;
+        dir[1] = directionY;
+        dir[2] = directionZ;
+    }
     public Edge add(CUBE cube){
         cubes.add(cube);
         cube.belongsTo.add(this);
         return this;
     }
-	public void clean(){
+	public void clean(){           //rename to clear
 		for(CUBE cube: cubes)
 			cube.belongsTo.clear();
 		cubes.clear();
 	}
-	private float lastRotationDirection = 0.5f;
+	private float lastRotationDirection = 0.6f;
+	private float defaultAngle = 2.5f;
     public void rotate(float angle){
         for(CUBE cube: cubes){
-            cube.rotate(angle, dirX, dirY, dirZ);
+            cube.rotate(angle, dir[0], dir[1], dir[2]);
         }
-		lastRotationDirection *= angle > 0? 1: -1;
+		if(Math.abs(lastRotationDirection + angle) < 0.5)
+			lastRotationDirection *= -1;
+		else if(Math.abs(lastRotationDirection + angle) < 5)
+			lastRotationDirection += angle;
     }
 
 	public boolean snapToEdge(){
-		//Log.d("RUB", "scalarShift: " + Float.toString(scalarShift));
 			for (CUBE cube: cubes)
-				if(cube.getAngle()%90 > lastRotationDirection)
-					cube.rotate(lastRotationDirection, dirX, dirY, dirZ);
+				if(Math.abs(cube.getAngle())%90 > defaultAngle)
+					cube.rotate(lastRotationDirection > 0? defaultAngle: -defaultAngle, dir[0], dir[1], dir[2]);
 				else
-					cube.rotate(lastRotationDirection - cube.getAngle()%90f, dirX, dirY, dirZ);
-		return cubes.get(0).getAngle()%90<0.01;
+					cube.rotate( - cube.getAngle()%90f, dir[0], dir[1], dir[2]);
+		return Math.abs(cubes.get(0).getAngle())%90<0.1;
 	}
 
-    public void linkToEdge(){
-
-    }
 
 
 }

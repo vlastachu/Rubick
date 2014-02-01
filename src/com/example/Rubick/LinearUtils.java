@@ -220,10 +220,10 @@ public class LinearUtils {
 		float[] res = new float[4];
 		for (int i=0;i<4;i++) {
 			res[i] =
-					matrix[i*4]*vector[0]+
-							matrix[i*4+1]*vector[1]+
-							matrix[i*4+2]*vector[2]+
-							matrix[i*4+3]*vector[3];
+					matrix[i]*vector[0]+
+							matrix[4+i]*vector[1]+
+							matrix[8+i]*vector[2]+
+							matrix[12+i]*vector[3];
 		}
 		return res;
 	}

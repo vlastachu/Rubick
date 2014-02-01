@@ -17,6 +17,7 @@
 package com.example.Rubick;
 
 import android.content.Context;
+import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -26,7 +27,6 @@ class BasicGLSurfaceView extends GLSurfaceView {
 	private float beginX = -1, beginY = -1, beginAngle = 0, beginDistance = -1;
 
 	private float getAngle(MotionEvent e){
-		//law of cosines
 		float d = getDistance(e);
 		float a = getDistance(e.getX(0) - e.getX(1), e.getY(0) - e.getY(1), d, 0);
 		if(e.getY(0) - e.getY(1) > 0)
@@ -45,11 +45,13 @@ class BasicGLSurfaceView extends GLSurfaceView {
 
 	public BasicGLSurfaceView(Context context) {
 		super(context);
-		setEGLContextClientVersion(2);
+        setEGLContextClientVersion(2);
 		renderer = new MyGL20Renderer();
 		setRenderer(renderer);
 	}
-	private float x, y, dx, dy;             float beginCameraDistance = -1;
+	private float x, y, dx, dy;
+    float beginCameraDistance = -1;
+	boolean rotationMode = false;
 	@Override
 	public boolean onTouchEvent(MotionEvent e) {
 		if (e.getPointerCount() == 1){
@@ -59,10 +61,12 @@ class BasicGLSurfaceView extends GLSurfaceView {
 			dy = y - beginY;
 			switch (e.getAction()) {
 				case MotionEvent.ACTION_DOWN:
-					//renderer.chooseCubeByPixel((int)x, (int)y);
+					renderer.chooseCubeByPixel((int)x, (int)y);
 					break;
 				case MotionEvent.ACTION_MOVE:
-					if(beginX != -1 && beginY != -1)
+					if(renderer.chosenCube == null)
+						renderer.rotateCameraPos(dx, dy);
+					else if(beginX != -1 && beginY != -1)
 						renderer.rotateEdge(dx, dy);
 					requestRender();
 					break;
@@ -70,13 +74,12 @@ class BasicGLSurfaceView extends GLSurfaceView {
 					beginDistance = -1;
 					beginX = -1;
 					beginY = -1;
-//					while(renderer.snapToEdge()){
-//						requestRender();
-//					}
+                    renderer.snapToEdge();
 				case MotionEvent.ACTION_CANCEL:
 					beginDistance = -1;
 					beginX = -1;
 					beginY = -1;
+					renderer.snapToEdge();
 			}
 		}else {
 			x = (e.getX(0) + e.getX(1))/2;
@@ -98,7 +101,7 @@ class BasicGLSurfaceView extends GLSurfaceView {
 				case MotionEvent.ACTION_MOVE:
 					renderer.rotateCameraPos(dx, dy);
 					renderer.rotateCameraTop(angle - beginAngle);
-					renderer.setCameraDistance((distance)/((beginDistance+distance)/(2*beginCameraDistance)));
+					//renderer.setCameraDistance((distance)/((beginDistance+distance)/(2*beginCameraDistance)));
 					requestRender();
 					break;
 				case MotionEvent.ACTION_UP:
