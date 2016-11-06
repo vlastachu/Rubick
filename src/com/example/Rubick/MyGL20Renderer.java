@@ -15,7 +15,7 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 
-public class MyGL20Renderer implements GLSurfaceView.Renderer {
+class MyGL20Renderer implements GLSurfaceView.Renderer {
 
     //private Cub[] cubs;
     private Rubick cube;
@@ -33,7 +33,12 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
         return shader;
     }
 
-
+    public void checkGLError(String op) {
+        int error;
+        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            Log.e("RUB", op + ": glError " + error);
+        }
+    }
 
 
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
@@ -44,9 +49,9 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
             for(int i = 0; i < cube.edges.length; i++)
                 if(cube.edges[i] == edge)
                     Log.d("RUB","9th cube belongs to: " + i);
+
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         GLES20.glEnable(GLES20.GL_BLEND);
-        GLES20.glEnable(GLES20.GL_DEPTH_BUFFER_BIT);
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         GLES20.glClearDepthf(1f);
 
@@ -56,7 +61,8 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
         Matrix.setIdentityM(ProjMatrix,0);
         Matrix.setIdentityM(VMatrix, 0);
         Matrix.setIdentityM(rotateMat, 0);
-        //cubs initialization
+
+        checkGLError("onSurfaceCreated");
     }
 
     long time;
@@ -68,7 +74,7 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
 	private float cameraDistance = 5.5f;
 	private float[] cameraTop = {0, 1, 0};
     public void onDrawFrame(GL10 unused) {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         Matrix.setLookAtM(VMatrix, 0, cameraPos[0]*cameraDistance, cameraPos[1]*cameraDistance, cameraPos[2]*cameraDistance, 0f, 0f, 0f, cameraTop[0], cameraTop[1], cameraTop[2]);
 		time = SystemClock.uptimeMillis() % 4000L;
         Matrix.multiplyMM(MVPMatrix, 0, ProjMatrix, 0, VMatrix, 0);
@@ -101,12 +107,13 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
                     _cube.resetColors();
             picking = false;
         }
-        else
-            cube.draw();
+        cube.draw();
+        checkGLError("onDrawFrame");
 
     }
 	private int surfaceWidth, surfaceHeight;
-    float ratio;
+    private float ratio;
+
     public void onSurfaceChanged(GL10 unused, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
 		surfaceWidth = width;
@@ -118,7 +125,9 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
 
     public CUBE chosenCube = null;
     private Edge chosenEdge = null;
-    private boolean picking = false; int pickX = 0, pickY = 0;
+    private boolean picking = false;
+    private int pickX = 0, pickY = 0;
+
 	public void chooseCubeByPixel(int x, int y){
         picking = true;
         pickX = x;
@@ -133,7 +142,7 @@ public class MyGL20Renderer implements GLSurfaceView.Renderer {
 		}
 	}
     //todo add picked flag
-	float accdx = 0, accdy = 0;
+	private float accdx = 0, accdy = 0;
 	public void rotateEdge(float dx, float dy){
         if(chosenCube == null) return;
 		dx = dx*6*ratio/((float)surfaceWidth);
